@@ -89,5 +89,5 @@ result['Sub4'] = df.T[4]
 result['Type'] = 0
 result['SrcNo'] = result['No']
 
-result.to_csv('Result-'+fileName+'.csv', index=None)
-print("求解结果保存到 Result-"+fileName+".csv")
+result.to_csv('res/Result-'+fileName+'.csv', index=None)
+print("求解结果保存到 res/Result-"+fileName+".csv")
