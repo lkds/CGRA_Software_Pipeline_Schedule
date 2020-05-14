@@ -1,12 +1,14 @@
 from pulp import LpMinimize, LpProblem, LpVariable, lpSum, LpMaximize, LpSolverDefault
 import pandas
+import math
 
 # 读取数据
-fileName = "g2"
+fileName = "g1"
 df = pandas.read_csv("src/"+fileName+".CSV", header=None)
 # 获取行数和列数
 maxNode = df.shape[0]
-maxStep = maxNode
+maxStep = max(df[6])+1
+# maxStep = maxNode
 ii = 3
 
 df = df.T
@@ -30,9 +32,13 @@ prob += maxPE
 # 添加约束
 # 最大最小约束
 # 求最小的最大值
-for i in range(maxStep):
-    prob += lpSum(vDict[j][i+maxStep*j]
-                  for j in range(maxNode)) <= lpSum(maxPE)
+for i in range(ii):
+    tmp = lpSum(vDict[j][i+maxStep*j] for j in range(maxNode))
+    times = math.ceil(maxStep / ii)
+    for k in range(1, times):
+        if (i + k * ii < maxStep):
+            tmp += lpSum(vDict[j][i+k*ii+maxStep*j] for j in range(maxNode))
+    prob += tmp <= lpSum(maxPE)
 
 # 资源约束
 for i in range(maxStep):
@@ -46,7 +52,7 @@ for i in range(maxNode):
 
 # 完成约束
 # 所有调度时间步必须和节点数目相同
-prob += lpSum(lpSum(vDict[i]) for i in range(maxStep)) == maxNode
+prob += lpSum(lpSum(vDict[i]) for i in range(maxNode)) == maxNode
 
 # 长/依赖约束
 for i in range(maxNode):
@@ -55,7 +61,7 @@ for i in range(maxNode):
         if (df[i][k] != 0):
             # 子节点调度步数在父节点之后
             prob += lpSum(vDict[i][j+maxStep*i] * j for j in range(maxStep)
-                          ) <= lpSum(vDict[df[i][k] - 1][m + maxStep * (df[i][k] - 1)] * m for m in range(maxStep))
+                          ) <= lpSum(vDict[df[i][k] - 1][m + maxStep * (df[i][k] - 1)] * m for m in range(maxStep))-1
             for kp in range(1, maxStep):
                 # 长依赖约束，不能是倍数
                 prob += lpSum(vDict[i][j+maxStep*i] * j for j in range(maxStep)
